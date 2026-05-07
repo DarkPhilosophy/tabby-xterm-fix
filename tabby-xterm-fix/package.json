@@ -1,0 +1,28 @@
+{
+  "name": "tabby-xterm-fix",
+  "version": "1.0.0",
+  "description": "Fixes Tabby terminal black/blank screen after inactive tab switching by preventing xterm canvas unload.",
+  "main": "index.js",
+  "author": "DarkPhilosophy",
+  "license": "MIT",
+  "keywords": [
+    "tabby-plugin",
+    "tabby",
+    "xterm",
+    "black-screen",
+    "terminal"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DarkPhilosophy/tabby-xterm-fix.git",
+    "directory": "tabby-xterm-fix"
+  },
+  "bugs": {
+    "url": "https://github.com/DarkPhilosophy/tabby-xterm-fix/issues"
+  },
+  "homepage": "https://github.com/DarkPhilosophy/tabby-xterm-fix#readme",
+  "peerDependencies": {
+    "@angular/core": "*",
+    "tabby-core": "*"
+  }
+}
