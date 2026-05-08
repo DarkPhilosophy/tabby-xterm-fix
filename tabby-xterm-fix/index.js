@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 /**
- * tabby-xterm-fix v1.0.0
+ * tabby-xterm-fix v1.1.0
  * Prevents Tabby's terminal visibility=false path from reaching the internal
  * delayed xterm canvas unload handler that can cause black/blank terminals.
  */
@@ -13,9 +13,17 @@ let path = null
 try { fs = require('fs'); path = require('path') } catch (_) {}
 
 const PLUGIN_ID = 'tabby-xterm-fix'
-const VERSION = '1.0.0'
+const VERSION = '1.1.0'
 const PATCH_FLAG = '__tabbyXtermFixPatched'
-const LOG_FILE = process.env.HOME && path ? path.join(process.env.HOME, '.cache', 'tabby-xterm-fix.log') : null
+function getLogFile () {
+    if (!path) return null
+    const cacheDir = process.env.XDG_CACHE_HOME ||
+        (process.platform === 'win32'
+            ? (process.env.LOCALAPPDATA || process.env.TEMP || process.env.USERPROFILE)
+            : (process.env.HOME ? path.join(process.env.HOME, '.cache') : null))
+    return cacheDir ? path.join(cacheDir, 'tabby-xterm-fix.log') : null
+}
+const LOG_FILE = getLogFile()
 
 function writeFileLog (level, args) {
     if (!LOG_FILE || !fs) return

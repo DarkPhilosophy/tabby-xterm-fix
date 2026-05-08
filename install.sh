@@ -5,8 +5,6 @@ PLUGIN_NAME="tabby-xterm-fix"
 REPO_URL="${TABBY_XTERM_FIX_REPO_URL:-https://github.com/DarkPhilosophy/tabby-xterm-fix.git}"
 BRANCH="${TABBY_XTERM_FIX_BRANCH:-main}"
 ARCHIVE_URL="${TABBY_XTERM_FIX_ARCHIVE_URL:-https://github.com/DarkPhilosophy/tabby-xterm-fix/archive/refs/heads/${BRANCH}.tar.gz}"
-PLUGINS_ROOT="${TABBY_PLUGINS_ROOT:-${HOME:-}/.config/tabby/plugins/node_modules}"
-INSTALL_DIR="${TABBY_XTERM_FIX_INSTALL_DIR:-${PLUGINS_ROOT}/${PLUGIN_NAME}}"
 TMP_DIR="$(mktemp -d 2>/dev/null || mktemp -d -t tabby-xterm-fix)"
 BACKUP_DIR=""
 
@@ -24,9 +22,48 @@ fail() {
     exit 1
 }
 
-if [ -z "${HOME:-}" ] && [ -z "${TABBY_XTERM_FIX_INSTALL_DIR:-}" ]; then
-    fail 'HOME is not set. Set TABBY_XTERM_FIX_INSTALL_DIR to the desired plugin path.'
-fi
+is_wsl() {
+    [ -n "${WSL_DISTRO_NAME:-}" ] && return 0
+    [ -n "${WSL_INTEROP:-}" ] && return 0
+    grep -qiE '(microsoft|wsl)' /proc/version 2>/dev/null
+}
+
+windows_appdata_from_wsl() {
+    command -v cmd.exe >/dev/null 2>&1 || return 1
+    command -v wslpath >/dev/null 2>&1 || return 1
+
+    win_appdata="$(cmd.exe /C 'echo %APPDATA%' 2>/dev/null | tr -d '\r' | tail -n 1)"
+    [ -n "$win_appdata" ] || return 1
+    case "$win_appdata" in
+        *%APPDATA%*) return 1 ;;
+    esac
+    wslpath -u "$win_appdata"
+}
+
+default_plugins_root() {
+    if is_wsl; then
+        if appdata_path="$(windows_appdata_from_wsl)"; then
+            printf '%s\n' "$appdata_path/tabby/plugins/node_modules"
+            return 0
+        fi
+        fail 'WSL detected, but Windows %APPDATA% could not be resolved. Set TABBY_PLUGINS_ROOT or TABBY_XTERM_FIX_INSTALL_DIR manually.'
+    fi
+
+    case "$(uname -s 2>/dev/null || printf unknown)" in
+        Darwin)
+            [ -n "${HOME:-}" ] || fail 'HOME is not set. Set TABBY_PLUGINS_ROOT or TABBY_XTERM_FIX_INSTALL_DIR manually.'
+            printf '%s\n' "$HOME/Library/Application Support/tabby/plugins/node_modules"
+            ;;
+        *)
+            [ -n "${HOME:-}" ] || fail 'HOME is not set. Set TABBY_PLUGINS_ROOT or TABBY_XTERM_FIX_INSTALL_DIR manually.'
+            printf '%s\n' "$HOME/.config/tabby/plugins/node_modules"
+            ;;
+    esac
+}
+
+DEFAULT_PLUGINS_ROOT="$(default_plugins_root)"
+PLUGINS_ROOT="${TABBY_PLUGINS_ROOT:-$DEFAULT_PLUGINS_ROOT}"
+INSTALL_DIR="${TABBY_XTERM_FIX_INSTALL_DIR:-${PLUGINS_ROOT}/${PLUGIN_NAME}}"
 
 fetch_with_git() {
     command -v git >/dev/null 2>&1 || return 1
@@ -44,6 +81,7 @@ fetch_with_archive() {
     fi
 }
 
+info "Install target: $INSTALL_DIR"
 info 'Downloading plugin...'
 if ! fetch_with_git; then
     info 'git clone unavailable or failed, trying archive download...'
@@ -74,4 +112,4 @@ fi
 
 VERSION="$(node -p "require('$INSTALL_DIR/package.json').version" 2>/dev/null || sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$INSTALL_DIR/package.json" | head -n 1)"
 info "tabby-xterm-fix v${VERSION:-unknown} installed successfully."
-info 'Fully restart Tabby, then check ~/.cache/tabby-xterm-fix.log if needed.'
+info 'Fully restart Tabby, then check the plugin log if needed.'

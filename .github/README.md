@@ -4,8 +4,22 @@ A compact Tabby plugin that fixes the terminal black/blank screen bug that can a
 
 ## Quick install
 
+### Linux, macOS, and WSL
+
 ```bash
 curl -fsSL https://raw.githubusercontent.com/DarkPhilosophy/tabby-xterm-fix/main/install.sh | sh
+```
+
+In WSL, the installer auto-detects Windows and installs into Tabby's Windows plugin folder:
+
+```text
+%APPDATA%\tabby\plugins\node_modules\tabby-xterm-fix
+```
+
+### Windows PowerShell
+
+```powershell
+iwr -useb https://raw.githubusercontent.com/DarkPhilosophy/tabby-xterm-fix/main/install.ps1 | iex
 ```
 
 Then fully restart Tabby.
@@ -20,7 +34,8 @@ Some Tabby versions unload inactive terminal tab canvases after about 30 seconds
 
 ```text
 .
-├── install.sh              # one-command installer
+├── install.sh              # Linux/macOS/WSL installer
+├── install.ps1             # Windows PowerShell installer
 ├── tabby-xterm-fix/        # actual Tabby plugin
 │   ├── index.js
 │   └── package.json
@@ -38,10 +53,29 @@ For terminal tabs only, it blocks `emitVisibility(false)`, which prevents `BaseT
 
 Tradeoff: terminal tabs stay logically visible to Tabby, so Tabby may not reclaim as much canvas memory from inactive terminal tabs. In practice this avoids the much worse permanent black-screen state.
 
-## Manual install
+## Manual install paths
+
+Linux:
+
+```text
+~/.config/tabby/plugins/node_modules/tabby-xterm-fix
+```
+
+macOS:
+
+```text
+~/Library/Application Support/tabby/plugins/node_modules/tabby-xterm-fix
+```
+
+Windows:
+
+```text
+%APPDATA%\tabby\plugins\node_modules\tabby-xterm-fix
+```
+
+Manual install example:
 
 ```bash
-mkdir -p ~/.config/tabby/plugins/node_modules
 git clone https://github.com/DarkPhilosophy/tabby-xterm-fix /tmp/tabby-xterm-fix
 cp -R /tmp/tabby-xterm-fix/tabby-xterm-fix ~/.config/tabby/plugins/node_modules/tabby-xterm-fix
 ```
@@ -54,14 +88,22 @@ Tabby's plugin list should show `tabby-xterm-fix` as loaded.
 
 The plugin also writes diagnostic logs to:
 
+Linux, macOS, WSL:
+
 ```text
 ~/.cache/tabby-xterm-fix.log
+```
+
+Windows native:
+
+```text
+%LOCALAPPDATA%\tabby-xterm-fix.log
 ```
 
 A successful load contains a line like:
 
 ```text
-prototype patch installed v1.0.0
+prototype patch installed v1.1.0
 ```
 
 When a terminal tab is hidden, you may see:
@@ -72,8 +114,16 @@ blocked terminal emitVisibility(false)
 
 ## Uninstall
 
+Linux/macOS/WSL:
+
 ```bash
 rm -rf ~/.config/tabby/plugins/node_modules/tabby-xterm-fix
+```
+
+Windows PowerShell:
+
+```powershell
+Remove-Item -Recurse -Force "$env:APPDATA\tabby\plugins\node_modules\tabby-xterm-fix"
 ```
 
 Then fully restart Tabby.
